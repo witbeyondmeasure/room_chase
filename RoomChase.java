@@ -44,7 +44,7 @@ public class RoomChase implements ActionListener, KeyListener, MouseListener, Co
 	public void startGame(){
 		addGameKeyListener(ui.getRoomPanel());
 		addGameMouseListener(ui.getRoomPanel());
-		ui.switchWindow(RIDDLEDOOR);
+		switchView(ui.getRoomPanel());
 		for(int i=0;i<playernum;i++){
 			ui.setPlayerLocationInMap(players.get(i).getLocationX(),players.get(i).getLocationY(),players.get(i).getColor(),players.get(i).getFace());
 		}
@@ -75,20 +75,23 @@ public class RoomChase implements ActionListener, KeyListener, MouseListener, Co
 	}
 
 	private void updateRoom(){
-		if(rooms[players.get(0).getLocationX()][players.get(0).getLocationY()].checkOpen(face)){
-			int x=rooms[players.get(0).getLocationX()][players.get(0).getLocationY()].getWall(face).getFacingX();
-			int y=rooms[players.get(0).getLocationX()][players.get(0).getLocationY()].getWall(face).getFacingY();
-			players.get(0).setLocation(new Point(x,y));
-			try{
-				sentence += "UPDATEROOM##"+players.get(0).getName()+"##"+players.get(0).getLocationX()+";;"+players.get(0).getLocationY()+"##"+players.get(0).getColor()+"##"+face;
-				sendData = sentence.getBytes();
-				DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, ipa, 4445);
-				clientSocket.send(sendPacket);
-				sentence = "";
-			}catch(Exception e){
-				e.printStackTrace();
-			}
+		int x=rooms[players.get(0).getLocationX()][players.get(0).getLocationY()].getWall(face).getFacingX();
+		int y=rooms[players.get(0).getLocationX()][players.get(0).getLocationY()].getWall(face).getFacingY();
+		players.get(0).setLocation(new Point(x,y));
+		switchView(ui.getRoomPanel());
+		try{
+			sentence += "UPDATEROOM##"+players.get(0).getName()+"##"+players.get(0).getLocationX()+";;"+players.get(0).getLocationY()+"##"+players.get(0).getColor()+"##"+face;
+			sendData = sentence.getBytes();
+			DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, ipa, 4445);
+			clientSocket.send(sendPacket);
+			sentence = "";
+		}catch(Exception e){
+			e.printStackTrace();
 		}
+	}
+
+	public void updatePlayer(int player1, int player2){
+		ui.updatePlayer(player1, player2);
 	}
 
 	public int searchPlayerByName(String name){
@@ -131,6 +134,8 @@ public class RoomChase implements ActionListener, KeyListener, MouseListener, Co
 		btns[0].addActionListener(this);
 		btns[1].addActionListener(this);
 		btns[2].addActionListener(this);
+		btns[3].addActionListener(this);
+		btns[4].addActionListener(this);
 	}
 
 	public void addTextAreaKeyListener(JTextArea ta){
@@ -189,6 +194,53 @@ public class RoomChase implements ActionListener, KeyListener, MouseListener, Co
 		}
 	}
 
+
+
+
+
+	public void removeGameKeyListener(RoomPanel[] roompanel){
+		for(int i=0;i<roompanel.length;i++){
+			roompanel[i].removeKeyListener(this);
+		}
+	}
+
+	public void removeGameMouseListener(RoomPanel[] roompanel){
+		for(int i=0;i<roompanel.length;i++){
+			roompanel[i].removeMouseListener(this);
+		}
+	}
+
+	public void stopKeys(){
+		removeGameKeyListener(ui.getRoomPanel());
+		removeGameMouseListener(ui.getRoomPanel());
+	}
+
+
+
+
+	public void removeFromMap(){
+		
+	}
+
+	public void switchView(RoomPanel[] rm){
+		if(rooms[players.get(0).getLocationX()][players.get(0).getLocationY()].getWall(face).getType()==NO_DOOR){
+			ui.switchWindow(NODOOR);
+			rm[0].requestFocus();
+		}
+		else if(rooms[players.get(0).getLocationX()][players.get(0).getLocationY()].getWall(face).getType()==RIDDLE_DOOR){
+			ui.switchWindow(RIDDLEDOOR);
+			rm[1].requestFocus();
+		}
+		else if(rooms[players.get(0).getLocationX()][players.get(0).getLocationY()].getWall(face).getType()==KEY_DOOR){
+			ui.switchWindow(KEYDOOR);
+			rm[2].requestFocus();
+		}
+		else if(rooms[players.get(0).getLocationX()][players.get(0).getLocationY()].getWall(face).getType()==WEIGHT_DOOR){
+			ui.switchWindow(WEIGHTDOOR);
+			rm[3].requestFocus();
+		}
+	}
+
 	public void keyTyped(KeyEvent e){
 
 	}
@@ -204,30 +256,32 @@ public class RoomChase implements ActionListener, KeyListener, MouseListener, Co
 			else face--;
 
 			updateFace();
-
-			if(face%2==0){
+			switchView(rm);
+			ui.clearAnswer();
+			/*if(face%2==0){
 				ui.switchWindow(KEYDOOR);
 				rm[2].requestFocus();
 			}
 			else {
 				ui.switchWindow(RIDDLEDOOR);
 				rm[1].requestFocus();
-			}
+			}*/
 		}
 		else if(e.getKeyCode()==39){
 			if(face==4) face=1;
 			else face++;
 
 			updateFace();
-
-			if(face%2==0){
+			switchView(rm);
+			ui.clearAnswer();
+			/*if(face%2==0){
 				ui.switchWindow(KEYDOOR);
 				rm[2].requestFocus();
 			}
 			else {
 				ui.switchWindow(RIDDLEDOOR);
 				rm[1].requestFocus();
-			}
+			}*/
 		}
 	}
 
@@ -265,13 +319,85 @@ public class RoomChase implements ActionListener, KeyListener, MouseListener, Co
 		RoomPanel[] rm = ui.getRoomPanel();
 		if(e.getComponent()!=rm[0]){
 			if((e.getX()>100&&e.getX()<420)&&(e.getY()>90&&e.getY()<670)){
-				System.out.println("door");
-				updateRoom();
+				if(rooms[players.get(0).getLocationX()][players.get(0).getLocationY()].checkOpen(face)){
+					updateRoom();
+				}
+				else{
+					String str = setClue(rooms[players.get(0).getLocationX()][players.get(0).getLocationY()].getWall(face).getAnswer());
+					ui.getRiddleLabel().setText(rooms[players.get(0).getLocationX()][players.get(0).getLocationY()].getWall(face).getRiddle()+str+"<br/></html>");
+					ui.showPuzzleJD();
+				}
 			}
 			else if((e.getX()>480&&e.getX()<735)&&(e.getY()>215&&e.getY()<530)){
-				System.out.println("puzzle");
+				String str = setClue(rooms[players.get(0).getLocationX()][players.get(0).getLocationY()].getWall(face).getAnswer());
+				ui.getRiddleLabel().setText(rooms[players.get(0).getLocationX()][players.get(0).getLocationY()].getWall(face).getRiddle()+str+"<br/></html>");
+				ui.showPuzzleJD();
 			}
 		}
+	}
+
+	private String setClue(String ans){
+		int cluenum = 0;
+		Random rand = new Random();
+		int[] clues = new int[2];
+		initClues(clues);
+		StringBuilder tempans = new StringBuilder(ans);
+		if(ans.length()<=3){
+			cluenum = 1;
+		}
+		else if(ans.length()>3&&ans.length()<6){
+			cluenum = 2;
+			clues = new int[cluenum];
+			initClues(clues);
+		}
+		else if(ans.length()==6&&ans.length()<10){
+			cluenum = 3;
+			clues = new int[cluenum];
+			initClues(clues);
+		}
+
+		if(cluenum==1){
+
+		}
+		else{
+			clues[0] = 0;
+			for(int i = 1; i < cluenum; i++){
+				int temp = rand.nextInt(ans.length());
+				while(checkClue(clues,temp)){
+					temp = rand.nextInt(ans.length());
+				}
+				clues[i]=temp;
+			}
+			for(int i=0;i<ans.length();i++){
+				if(!ifClue(clues,i)){
+					tempans.setCharAt(i,'_');
+				}
+			}
+		}
+		return tempans.toString().replace("_"," _");
+	}
+
+	private boolean ifClue(int[] clues, int temp){
+		for(int i=0;i<clues.length;i++){
+			if(clues[i]==temp){
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private void initClues(int[] clues){
+		for(int i=0; i<clues.length; i++){
+			clues[i] = -1;
+		}
+	}
+
+	private boolean checkClue(int[] clues, int temp){
+		for(int i=1; i<clues.length; i++){
+			if(clues[i]==temp) return true;
+		}
+		return false;
 	}
 
 	public void actionPerformed(ActionEvent e){
@@ -296,6 +422,22 @@ public class RoomChase implements ActionListener, KeyListener, MouseListener, Co
 		}
 		else if(e.getSource()==btn[2]){ 
 			ui.hideNameWarning();
+		}
+		else if(e.getSource()==btn[3]){ 
+			ui.hideAlert();
+		}
+		else if(e.getSource()==btn[4]){
+			if(ui.getAnswer().toLowerCase().equals(rooms[players.get(0).getLocationX()][players.get(0).getLocationY()].getWall(face).getAnswer().toLowerCase())){
+				int x = players.get(0).getLocationX(), y = players.get(0).getLocationY();
+				rooms[x][y].getWall(face).open(true);
+				ui.hidePuzzleJD();
+				updateRoom();
+				rooms[x][y].getWall(face).open(false);
+				ui.clearAnswer();
+			}
+			else {
+				ui.getRiddleLabel().setText(rooms[players.get(0).getLocationX()][players.get(0).getLocationY()].getWall(face).getRiddle().replace("<html>","<html> INCORRECT!!! <br/>"));
+			}
 		}
 	}
 }

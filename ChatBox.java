@@ -71,4 +71,12 @@ public class ChatBox{
 		String[] temp2 = oldloc.split(";;");
 		rc.updateRoomInMap(name, new Point(Integer.parseInt(temp[0]),Integer.parseInt(temp[1])), color, Integer.parseInt(face),new Point(Integer.parseInt(temp2[0]),Integer.parseInt(temp2[1])));
 	}	
+
+	public void stopKeys(){
+		rc.stopKeys();
+	}
+
+	public void updatePlayer(String player1, String player2){
+		rc.updatePlayer(Integer.parseInt(player1), Integer.parseInt(player2));
+	}
 }

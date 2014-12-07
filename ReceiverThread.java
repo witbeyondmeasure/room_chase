@@ -46,6 +46,13 @@ class ReceiverThread extends Thread{
 					String[] msg = sentence.split("##");
 					cb.updateRoomInMap(msg[1],msg[2],msg[3],msg[4],msg[5]);
 				}
+				else if(sentence.startsWith("DEATH##")){
+					String[] msg = sentence.split("##");
+					cb.updatePlayer(msg[1],msg[2]);
+				}
+				else if(sentence.startsWith("TERMINATE##")){
+					cb.stopKeys();
+				}
 				else if(sentence.equals("START")){
 					cb.startGame();
 				}

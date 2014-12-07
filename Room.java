@@ -63,6 +63,7 @@ public class Room implements Constants{
 			wall[3] = new Wall(west, new Point(2,1));
 		}
 	}
+	
 	public void setContains(String contains){
 		this.contains = contains;
 	}
@@ -76,6 +77,6 @@ public class Room implements Constants{
 	}
 
 	public boolean checkOpen(int face){
-		return getWall(face).open();
+		return getWall(face).checkOpen();
 	}
 }

@@ -90,15 +90,27 @@ public class GameServer implements Runnable,Constants{
 
 		int oldx = players.get(p).getLocationX();
 		int oldy = players.get(p).getLocationY();
+		int newx = Integer.parseInt(temp2[0]);
+		int newy = Integer.parseInt(temp2[1]);
 
 		msg = msg + "##" +oldx+";;"+oldy;
 
-		players.get(p).setLocation(new Point(Integer.parseInt(temp2[0]),Integer.parseInt(temp2[1])));
+		if(collide(newx, newy))
+		{
+			for(int i=0;i<playernum;i++){
+				if(players.get(i).getLocationX()==newx&&players.get(i).getLocationY()==newy){
+					killPlayer(p, i);
+					break;
+				}
+			}
+		}
 
+		players.get(p).setLocation(new Point(Integer.parseInt(temp2[0]),Integer.parseInt(temp2[1])));
 		rooms[oldx][oldy] = -1;
-		rooms[Integer.parseInt(temp2[0])][Integer.parseInt(temp2[1])] = players.get(p).getID();
+		rooms[Integer.parseInt(temp2[0])][Integer.parseInt(temp2[1])] = players.get(p).getID()-1;
 
 		/*checkSides(Integer.parseInt(temp2[0]),Integer.parseInt(temp2[1]));*/
+		
 
 		for(int i=0;i<playernum;i++){
 			try{
@@ -110,6 +122,42 @@ public class GameServer implements Runnable,Constants{
 
 			}
 		}
+	}
+
+	private void killPlayer(int player1, int player2){
+		//1 = int for killer
+		//2 = int for victim
+		String msg = "DEATH##"+player1+"##"+player2;
+		String msg2 = "TERMINATE##";
+
+		//broadcast the death
+		for(int i=0;i<playernum;i++){
+			try{
+				sendData = msg.getBytes();
+				DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, players.get(i).getIPAddress(), players.get(i).getPort());
+				serverSocket.send(sendPacket);
+			}
+			catch(Exception e){
+
+			}
+		}
+
+		//terminate inputs from player2
+		try{
+				sendData = msg2.getBytes();
+				DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, players.get(player2).getIPAddress(), players.get(player2).getPort());
+				serverSocket.send(sendPacket);
+			}
+			catch(Exception e){
+
+			}
+
+		//update player list and count
+		players.remove(player2);
+		playernum--;
+
+
+		// System.out.println(msg);
 	}
 
 	private void checkSides(int x, int y){
@@ -340,6 +388,7 @@ public class GameServer implements Runnable,Constants{
 					}
 					else if(protocol.startsWith("UPDATEROOM##")){
 						broadcastRoomMovement(protocol);
+						printLoc();
 					}
 					break;
 				case IN_PROGRESS:

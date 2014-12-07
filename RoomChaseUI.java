@@ -8,7 +8,7 @@ public class RoomChaseUI implements Constants{
 	private static JFrame ui = new JFrame("Room Chase!!!");
 	private static CardLayout cl = new CardLayout();
 	private static JPanel panel = new JPanel(cl);
-	private static JDialog[] jd = new JDialog[2];
+	private static JDialog[] jd = new JDialog[4];
 	private CardLayout front = new CardLayout();
 	private JPanel mainpanel = new JPanel();
 	private JPanel splash = new JPanel();
@@ -18,11 +18,13 @@ public class RoomChaseUI implements Constants{
 	private JPanel mapPanel = new JPanel();
 	private MapPanelGrid[][] mapPanelGrid = new MapPanelGrid[3][3];
 	private RoomPanel[] roomPanel = new RoomPanel[4];
-	private JLabel label[] = new JLabel[5];
+	private JLabel label[] = new JLabel[7];
 	private JTextArea[] textarea = new JTextArea[2];
 	private JScrollPane[] scrollpane = new JScrollPane[2];
-	private JButton[] button = new JButton[3];
+	private JButton[] button = new JButton[5];
 	private static JTextField textfield = new JTextField();
+	private JTextField alert = new JTextField();
+	private JTextField answerBox = new JTextField();
 
 	public RoomChaseUI(RoomChase rc){
 		//splash panel creation setup
@@ -38,6 +40,8 @@ public class RoomChaseUI implements Constants{
 		label[1] = new JLabel("There is someone in a room next to you."); //this label will show if the game detects that someone is in a room next to player
 		label[2] = new JLabel("Enter name: ");
 		label[3] = new JLabel("Name is required!");
+		label[5] = new JLabel("Alert: ");
+		label[6] = new JLabel("");
 		
 
 		waitWindow.setBackground(Color.black);
@@ -53,7 +57,7 @@ public class RoomChaseUI implements Constants{
 		textarea[0].setEditable(false);
 		textarea[0].setLineWrap(true);
 		textarea[1].setLineWrap(true);
-		
+
 		mainpanel.setLayout(null);
 		mainpanel.setBackground(Color.black);
 		
@@ -63,14 +67,18 @@ public class RoomChaseUI implements Constants{
 		button[0] = new JButton("Send");
 		button[1] = new JButton("OK");
 		button[2] = new JButton("OK");
+		button[3] = new JButton("Dismiss");
+		button[4] = new JButton("Submit");
 
 		jd[0] = new JDialog(ui,true);
 		jd[1] = new JDialog(ui,true);
+		jd[2] = new JDialog(ui,true);
+		jd[3] = new JDialog(ui,true);
 
 		jd[0].setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
 
-		Container[] c = new Container[2];
-		JPanel[] p = new JPanel[2];
+		Container[] c = new Container[4];
+		JPanel[] p = new JPanel[4];
 
 		c[0] = jd[0].getContentPane();
 		p[0] = new JPanel();
@@ -85,6 +93,8 @@ public class RoomChaseUI implements Constants{
 		jd[0].pack();
 		jd[0].setLocationRelativeTo(null);
 
+
+
 		jd[1].setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
 
 		c[1] = jd[1].getContentPane();
@@ -98,6 +108,39 @@ public class RoomChaseUI implements Constants{
 
 		jd[1].pack();
 		jd[1].setLocationRelativeTo(null);
+
+
+
+		jd[2].setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
+
+		c[2] = jd[2].getContentPane();
+		p[2] = new JPanel();
+		c[2].setLayout(new BorderLayout());
+
+		c[2].add(label[5],BorderLayout.NORTH);
+		c[2].add(alert,BorderLayout.CENTER);
+		p[2].setLayout(new FlowLayout());
+		p[2].add(button[3]);
+		c[2].add(p[2],BorderLayout.SOUTH);
+
+		jd[2].pack();
+		jd[2].setLocationRelativeTo(null);
+
+		jd[3].setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
+
+		c[3] = jd[3].getContentPane();
+		p[3] = new JPanel();
+		c[3].setLayout(new BorderLayout());
+
+		c[3].add(label[6],BorderLayout.NORTH);
+		c[3].add(answerBox,BorderLayout.CENTER);
+		p[3].setLayout(new FlowLayout());
+		p[3].add(button[4]);
+		c[3].add(p[3],BorderLayout.SOUTH);
+
+		jd[3].setPreferredSize(new Dimension(300,200));
+		jd[3].pack();
+		jd[3].setLocationRelativeTo(null);
 
 		chatbox.setLayout(null);
 		chatbox.add(scrollpane[0]);
@@ -158,6 +201,18 @@ public class RoomChaseUI implements Constants{
 		}
 	}
 
+	public String getAnswer(){
+		return answerBox.getText();
+	}
+
+	public void clearAnswer(){
+		answerBox.setText("");
+	}
+
+	public JLabel getRiddleLabel(){
+		return label[6];
+	}
+
 	public JPanel getStageWindow(){
 		return stageWindow;
 	}
@@ -181,6 +236,18 @@ public class RoomChaseUI implements Constants{
 
 	public void hideNameWarning(){
 		jd[1].setVisible(false);
+	}
+
+	public void hideAlert(){
+		jd[2].setVisible(false);
+	}
+
+	public void showPuzzleJD(){
+		jd[3].setVisible(true);
+	}
+
+	public void hidePuzzleJD(){
+		jd[3].setVisible(false);
 	}
 
 	public String getInputName(){
@@ -236,6 +303,12 @@ public class RoomChaseUI implements Constants{
 		textarea[0].setEditable(true);
 		textarea[0].setText(textarea[0].getText()+"\n"+msg);
 		textarea[0].setEditable(false);
+	}
+
+	public void updatePlayer(int killer, int killed){
+		alert.setText(killed+" was caught by "+killer);
+		alert.setEditable(false);
+		jd[2].setVisible(true);
 	}
 
 	public static void main(String[] args){
