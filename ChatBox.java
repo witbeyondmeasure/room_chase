@@ -77,6 +77,14 @@ public class ChatBox{
 	}
 
 	public void updatePlayer(String player1, String player2){
-		rc.updatePlayer(Integer.parseInt(player1), Integer.parseInt(player2));
+		rc.updatePlayer(player1, player2);
+	}
+
+	public void showVictory(){
+		rc.showVictory();
+	}
+
+	public void showDefeat(){
+		rc.showDefeat();
 	}
 }

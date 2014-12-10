@@ -17,7 +17,7 @@ public class RoomChaseUI implements Constants{
 	private JPanel stageWindow = new JPanel(front);
 	private JPanel mapPanel = new JPanel();
 	private MapPanelGrid[][] mapPanelGrid = new MapPanelGrid[3][3];
-	private RoomPanel[] roomPanel = new RoomPanel[4];
+	private RoomPanel[] roomPanel = new RoomPanel[6];
 	private JLabel label[] = new JLabel[7];
 	private JTextArea[] textarea = new JTextArea[2];
 	private JScrollPane[] scrollpane = new JScrollPane[2];
@@ -167,11 +167,15 @@ public class RoomChaseUI implements Constants{
 		roomPanel[1] = new RoomPanel(new ImageIcon("Images/riddledoor.jpg").getImage());
 		roomPanel[2] = new RoomPanel(new ImageIcon("Images/keydoor.jpg").getImage());
 		roomPanel[3] = new RoomPanel(new ImageIcon("Images/weightdoor.jpg").getImage());
+		roomPanel[4] = new RoomPanel(new ImageIcon("Images/win.jpg").getImage());
+		roomPanel[5] = new RoomPanel(new ImageIcon("Images/defeat.jpg").getImage());
 		stageWindow.add(waitWindow,WAITWINDOW);
 		stageWindow.add(roomPanel[0], NODOOR);
 		stageWindow.add(roomPanel[1], RIDDLEDOOR);
 		stageWindow.add(roomPanel[2], KEYDOOR);
 		stageWindow.add(roomPanel[3], WEIGHTDOOR);
+		stageWindow.add(roomPanel[4], WIN);
+		stageWindow.add(roomPanel[5], DEFEAT);
 
 		stageWindow.setFocusable(true);
 
@@ -305,7 +309,7 @@ public class RoomChaseUI implements Constants{
 		textarea[0].setEditable(false);
 	}
 
-	public void updatePlayer(int killer, int killed){
+	public void updatePlayer(String killer, String killed){
 		alert.setText(killed+" was caught by "+killer);
 		alert.setEditable(false);
 		jd[2].setVisible(true);

@@ -2,13 +2,14 @@ import java.io.*;
 import java.net.*;
 import java.awt.*;
 
-public class Player{
+public class Player implements Constants{
 	private String name;
 	private InetAddress ipa;
 	private int port; 
 	private int id;
 	private Point location = new Point(-1,-1);
 	private String color;
+	private int status;
 	private int face = 1;
 
 	public Player(int id, String name, InetAddress ipa, int port, String color){
@@ -16,7 +17,8 @@ public class Player{
 		this.ipa = ipa;
 		this.port = port;
 		this.id = id;
-		this. color = color;
+		this.color = color;
+		this.status = ALIVE;
 	}
 
 	public Player(String name, Point location, String color){
@@ -59,6 +61,14 @@ public class Player{
 
 	public int getFace(){
 		return this.face;
+	}
+
+	public int getStatus(){
+		return this.status;
+	}
+
+	public void setStatus(int status){
+		this.status = status;
 	}
 
 	public void setFace(int face){

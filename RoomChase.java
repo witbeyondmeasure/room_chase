@@ -90,7 +90,7 @@ public class RoomChase implements ActionListener, KeyListener, MouseListener, Co
 		}
 	}
 
-	public void updatePlayer(int player1, int player2){
+	public void updatePlayer(String player1, String player2){
 		ui.updatePlayer(player1, player2);
 	}
 
@@ -215,8 +215,13 @@ public class RoomChase implements ActionListener, KeyListener, MouseListener, Co
 		removeGameMouseListener(ui.getRoomPanel());
 	}
 
+	public void showVictory(){
+		ui.switchWindow(WIN);
+	}
 
-
+	public void showDefeat(){
+		ui.switchWindow(DEFEAT);
+	}
 
 	public void removeFromMap(){
 		
@@ -350,7 +355,7 @@ public class RoomChase implements ActionListener, KeyListener, MouseListener, Co
 			clues = new int[cluenum];
 			initClues(clues);
 		}
-		else if(ans.length()==6&&ans.length()<10){
+		else if(ans.length()>=6&&ans.length()<10){
 			cluenum = 3;
 			clues = new int[cluenum];
 			initClues(clues);

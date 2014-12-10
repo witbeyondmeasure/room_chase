@@ -6,6 +6,8 @@ public interface Constants{
 	public static final String RIDDLEDOOR = "Riddle door";
 	public static final String KEYDOOR = "Key door";
 	public static final String WEIGHTDOOR = "Weight door";
+	public static final String WIN = "Win";
+	public static final String DEFEAT = "Defeat";
 
 	public final int WAITING_FOR_PLAYERS = 0;
 	public static final int GAME_START=1;
@@ -18,4 +20,7 @@ public interface Constants{
 	public final int RIDDLE_DOOR = 101;
 	public final int KEY_DOOR = 102;
 	public final int WEIGHT_DOOR = 103;
+
+	public final int ALIVE = 1;
+	public final int DEAD = 0;
 }

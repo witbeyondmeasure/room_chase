@@ -99,7 +99,8 @@ public class GameServer implements Runnable,Constants{
 		{
 			for(int i=0;i<playernum;i++){
 				if(players.get(i).getLocationX()==newx&&players.get(i).getLocationY()==newy){
-					killPlayer(p, i);
+					killPlayer(players.get(p).getName(), players.get(i).getName(), i);
+					// p = searchPlayerByName(temp[1]);
 					break;
 				}
 			}
@@ -108,8 +109,7 @@ public class GameServer implements Runnable,Constants{
 		players.get(p).setLocation(new Point(Integer.parseInt(temp2[0]),Integer.parseInt(temp2[1])));
 		rooms[oldx][oldy] = -1;
 		rooms[Integer.parseInt(temp2[0])][Integer.parseInt(temp2[1])] = players.get(p).getID()-1;
-
-		/*checkSides(Integer.parseInt(temp2[0]),Integer.parseInt(temp2[1]));*/
+		checkSides(Integer.parseInt(temp2[0]),Integer.parseInt(temp2[1]));
 		
 
 		for(int i=0;i<playernum;i++){
@@ -124,10 +124,10 @@ public class GameServer implements Runnable,Constants{
 		}
 	}
 
-	private void killPlayer(int player1, int player2){
+	private void killPlayer(String player0, String player1, int player2){
 		//1 = int for killer
 		//2 = int for victim
-		String msg = "DEATH##"+player1+"##"+player2;
+		String msg = "DEATH##"+player0+"##"+player1;
 		String msg2 = "TERMINATE##";
 
 		//broadcast the death
@@ -153,105 +153,77 @@ public class GameServer implements Runnable,Constants{
 			}
 
 		//update player list and count
-		players.remove(player2);
+		players.get(player2).setStatus(DEAD);
+		rooms[players.get(player2).getLocationX()][players.get(player2).getLocationY()]=-1;
 		playernum--;
 
+		if(playernum==1){
+			int num = searchWinner();
+			gameStage = GAME_END;
+			try{
+				sendData = msg2.getBytes();
+				DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, players.get(num).getIPAddress(), players.get(num).getPort());
+				serverSocket.send(sendPacket);
+			}
+			catch(Exception e){
 
+			}
+
+			String win = "VICTOR";
+			String lose = "DEFEATED";
+
+			for(int i=0;i<players.size();i++){
+				if(players.get(i).getStatus()==DEAD){
+					try{
+						sendData = lose.getBytes();
+						DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, players.get(i).getIPAddress(), players.get(i).getPort());
+						serverSocket.send(sendPacket);
+					}
+					catch(Exception e){
+
+					}
+				}
+				else if(players.get(i).getStatus()==ALIVE){
+					try{
+						sendData = win.getBytes();
+						DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, players.get(i).getIPAddress(), players.get(i).getPort());
+						serverSocket.send(sendPacket);
+					}
+					catch(Exception e){
+
+					}
+				}
+			}
+		}
 		// System.out.println(msg);
+	}
+
+	private int searchWinner(){
+		for(int i=0;i<players.size();i++){
+			if(players.get(i).getStatus()==ALIVE){
+				return i;
+			}
+		}
+		return -1;
 	}
 
 	private void checkSides(int x, int y){
 		String msg = "MSG##Server: There is someone in a room next to you";
-		sendToPlayer(msg, players.get(rooms[x][y]-1).getIPAddress(),players.get(rooms[x][y]-1).getPort());
-		if(x==0&&y==0){
-			if(rooms[0][1]!=-1){
-				sendToPlayer(msg, players.get(rooms[0][1]-1).getIPAddress(),players.get(rooms[0][1]-1).getPort());
-			}
-			else if(rooms[1][0]!=-1){
-				sendToPlayer(msg, players.get(rooms[1][0]-1).getIPAddress(),players.get(rooms[1][0]-1).getPort());
-			}
-		}
-		else if(x==0&&y==1){
-			if(rooms[0][0]!=-1){
-				sendToPlayer(msg, players.get(rooms[0][0]-1).getIPAddress(),players.get(rooms[0][0]-1).getPort());
-			}
-			else if(rooms[1][1]!=-1){
-				sendToPlayer(msg, players.get(rooms[1][1]-1).getIPAddress(),players.get(rooms[1][1]-1).getPort());
-			}
-			else if(rooms[0][2]!=-1){
-				sendToPlayer(msg, players.get(rooms[0][2]-1).getIPAddress(),players.get(rooms[0][2]-1).getPort());
+		int temp, flag=0;
+		for (int dx = (x > 0 ? -1 : 0); dx <= (x < 2 ? 1 : 0); ++dx){
+			for (int dy = (y > 0 ? -1 : 0); dy <= (y < 2 ? 1 : 0); ++dy){
+		    	if((dx==0&&dy==0)||(dx==dy)){}
+		    	else if(rooms[x+dx][y+dy]!=-1){
+		    		temp = searchPlayerIndex(x+dx, y+dy);
+					sendToPlayer(msg, players.get(temp).getIPAddress(),players.get(temp).getPort());
+					flag=1;
+				}
 			}
 		}
-		else if(x==0&&y==2){
-			if(rooms[0][1]!=-1){
-				sendToPlayer(msg, players.get(rooms[0][1]-1).getIPAddress(),players.get(rooms[0][1]-1).getPort());
-			}
-			else if(rooms[1][2]!=-1){
-				sendToPlayer(msg, players.get(rooms[1][2]-1).getIPAddress(),players.get(rooms[1][2]-1).getPort());
-			}
-		}
-		else if(x==1&&y==0){
-			if(rooms[0][0]!=-1){
-				sendToPlayer(msg, players.get(rooms[0][0]-1).getIPAddress(),players.get(rooms[0][0]-1).getPort());
-			}
-			else if(rooms[1][1]!=-1){
-				sendToPlayer(msg, players.get(rooms[1][1]-1).getIPAddress(),players.get(rooms[1][1]-1).getPort());
-			}
-			else if(rooms[2][0]!=-1){
-				sendToPlayer(msg, players.get(rooms[2][0]-1).getIPAddress(),players.get(rooms[2][0]-1).getPort());
-			}
-		}
-		else if(x==1&&y==1){
-			if(rooms[0][1]!=-1){
-				sendToPlayer(msg, players.get(rooms[0][1]-1).getIPAddress(),players.get(rooms[0][1]-1).getPort());
-			}
-			else if(rooms[1][0]!=-1){
-				sendToPlayer(msg, players.get(rooms[1][0]-1).getIPAddress(),players.get(rooms[1][0]-1).getPort());
-			}
-			else if(rooms[2][1]!=-1){
-				sendToPlayer(msg, players.get(rooms[2][1]-1).getIPAddress(),players.get(rooms[2][1]-1).getPort());
-			}
-			else if(rooms[1][2]!=-1){
-				sendToPlayer(msg, players.get(rooms[1][2]-1).getIPAddress(),players.get(rooms[1][2]-1).getPort());
-			}
-		}
-		else if(x==1&&y==2){
-			if(rooms[0][2]!=-1){
-				sendToPlayer(msg, players.get(rooms[0][2]-1).getIPAddress(),players.get(rooms[0][2]-1).getPort());
-			}
-			else if(rooms[1][1]!=-1){
-				sendToPlayer(msg, players.get(rooms[1][1]-1).getIPAddress(),players.get(rooms[1][1]-1).getPort());
-			}
-			else if(rooms[2][2]!=-1){
-				sendToPlayer(msg, players.get(rooms[2][2]-1).getIPAddress(),players.get(rooms[2][2]-1).getPort());
-			}
-		}
-		else if(x==2&&y==0){
-			if(rooms[1][0]!=-1){
-				sendToPlayer(msg, players.get(rooms[1][0]-1).getIPAddress(),players.get(rooms[1][0]-1).getPort());
-			}
-			else if(rooms[2][1]!=-1){
-				sendToPlayer(msg, players.get(rooms[2][1]-1).getIPAddress(),players.get(rooms[2][1]-1).getPort());
-			}
-		}
-		else if(x==2&&y==1){
-			if(rooms[2][0]!=-1){
-				sendToPlayer(msg, players.get(rooms[2][0]-1).getIPAddress(),players.get(rooms[2][0]-1).getPort());
-			}
-			else if(rooms[1][1]!=-1){
-				sendToPlayer(msg, players.get(rooms[1][1]-1).getIPAddress(),players.get(rooms[1][1]-1).getPort());
-			}
-			else if(rooms[2][2]!=-1){
-				sendToPlayer(msg, players.get(rooms[2][2]-1).getIPAddress(),players.get(rooms[2][2]-1).getPort());
-			}
-		}
-		else if(x==2&&y==2){
-			if(rooms[1][2]!=-1){
-				sendToPlayer(msg, players.get(rooms[1][2]-1).getIPAddress(),players.get(rooms[1][2]-1).getPort());
-			}
-			else if(rooms[2][1]!=-1){
-				sendToPlayer(msg, players.get(rooms[2][1]-1).getIPAddress(),players.get(rooms[2][1]-1).getPort());
-			}
+		
+		if(flag==1) {
+			temp = searchPlayerIndex(x, y);
+			sendToPlayer(msg, players.get(temp).getIPAddress(),players.get(temp).getPort());
 		}
 	}
 
@@ -340,6 +312,15 @@ public class GameServer implements Runnable,Constants{
 		return null;
 	}
 
+	public int searchPlayerIndex(int x, int y){
+		for(int i=0;i<playernum;i++){
+			if(players.get(i).getLocationX()==x && players.get(i).getLocationY()==y){
+				return i;
+			}
+		}
+		return -1;
+	}
+
 	public void run(){
 		while(true){
 			byte[] buf = new byte[1024];
@@ -392,6 +373,12 @@ public class GameServer implements Runnable,Constants{
 					}
 					break;
 				case IN_PROGRESS:
+					break;
+				case GAME_END:
+					if(protocol.startsWith("SEND##")){
+						String msg[] = protocol.split("##");
+						broadcast(msg[1],msg[2],searchPlayerColor(msg[1]));
+					}
 					break;
 			}
 		}

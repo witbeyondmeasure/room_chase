@@ -56,6 +56,12 @@ class ReceiverThread extends Thread{
 				else if(sentence.equals("START")){
 					cb.startGame();
 				}
+				else if(sentence.equals("VICTOR")){
+					cb.showVictory();
+				}
+				else if(sentence.equals("DEFEATED")){
+					cb.showDefeat();
+				}
 			}catch(Exception e){
 				
 			}
