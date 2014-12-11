@@ -1,3 +1,7 @@
+/**
+*Riddle Class: Class for storing riddles and answers
+*/
+
 import java.awt.*;
 
 public class Riddle{

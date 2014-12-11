@@ -1,3 +1,7 @@
+/**
+* RoomChase Class: All background processes of the game occur in this class
+*/
+
 import java.io.*;
 import java.net.*;
 import java.awt.*;
@@ -31,7 +35,7 @@ public class RoomChase implements ActionListener, KeyListener, MouseListener, Co
 	
 	}
 
-	public void initRooms(){
+	public void initRooms(){ //initializes rooms from the server
 		String[] roomDoors = doorPosition.split("##");
 		for(int i=0;i<3;i++){
 			for(int j=0;j<3;j++){
@@ -41,16 +45,17 @@ public class RoomChase implements ActionListener, KeyListener, MouseListener, Co
 		}
 	}
 
-	public void startGame(){
+	public void startGame(){ //signals the start of the game
 		addGameKeyListener(ui.getRoomPanel());
 		addGameMouseListener(ui.getRoomPanel());
 		switchView(ui.getRoomPanel());
 		for(int i=0;i<playernum;i++){
+			// System.out.println("name: "+players.get(i).getName());
 			ui.setPlayerLocationInMap(players.get(i).getLocationX(),players.get(i).getLocationY(),players.get(i).getColor(),players.get(i).getFace());
 		}
 	}
 
-	public void connect(String name){
+	public void connect(String name){ //requests for connecting to the server
 		try{
 			sentence += "CONNECT##"+name;
 			sendData = sentence.getBytes();
@@ -62,7 +67,7 @@ public class RoomChase implements ActionListener, KeyListener, MouseListener, Co
 		}
 	}
 
-	private void updateFace(){
+	private void updateFace(){ //sends updated wall where the player is facing to the server
 		try{
 			sentence += "UPDATEFACE##"+players.get(0).getName()+"##"+players.get(0).getLocationX()+";;"+players.get(0).getLocationY()+"##"+players.get(0).getColor()+"##"+face;
 			sendData = sentence.getBytes();
@@ -74,7 +79,7 @@ public class RoomChase implements ActionListener, KeyListener, MouseListener, Co
 		}
 	}
 
-	private void updateRoom(){
+	private void updateRoom(){ //sends player's updated location to the server
 		int x=rooms[players.get(0).getLocationX()][players.get(0).getLocationY()].getWall(face).getFacingX();
 		int y=rooms[players.get(0).getLocationX()][players.get(0).getLocationY()].getWall(face).getFacingY();
 		players.get(0).setLocation(new Point(x,y));
@@ -94,7 +99,7 @@ public class RoomChase implements ActionListener, KeyListener, MouseListener, Co
 		ui.updatePlayer(player1, player2);
 	}
 
-	public int searchPlayerByName(String name){
+	public int searchPlayerByName(String name){ //searches player by name
 		for(int i=0;i<playernum;i++){
 			if(players.get(i).getName().equals(name)){
 				return i;
@@ -103,7 +108,7 @@ public class RoomChase implements ActionListener, KeyListener, MouseListener, Co
 		return -1;
 	}
 
-	public void updateFaceInMap(String name, Point p, String color, int face){
+	public void updateFaceInMap(String name, Point p, String color, int face){ //updates the direction where a player is facing to the map from the server
 		int temp = searchPlayerByName(name);
 		players.get(temp).setLocation(p);
 		players.get(temp).setColor(color);
@@ -112,7 +117,7 @@ public class RoomChase implements ActionListener, KeyListener, MouseListener, Co
 		ui.setPlayerLocationInMap(players.get(temp).getLocationX(),players.get(temp).getLocationY(),players.get(temp).getColor(),players.get(temp).getFace());
 	}
 
-	public void updateRoomInMap(String name, Point p, String color, int face, Point oldp){
+	public void updateRoomInMap(String name, Point p, String color, int face, Point oldp){ //updates room location of a player from server to map
 		int temp = searchPlayerByName(name);
 		players.get(temp).setLocation(p);
 		players.get(temp).setColor(color);
@@ -122,7 +127,7 @@ public class RoomChase implements ActionListener, KeyListener, MouseListener, Co
 		ui.setPlayerLocationInMap(players.get(temp).getLocationX(),players.get(temp).getLocationY(),players.get(temp).getColor(),players.get(temp).getFace());
 	}
 
-	public void addWindowListenerToJDialog(JDialog jd){
+	public void addWindowListenerToJDialog(JDialog jd){ //ads window listener to jdialog
 		jd.addWindowListener(new WindowAdapter(){
 			public void windowClosing(WindowEvent e){
 				ui.showNameWarning();
@@ -130,7 +135,7 @@ public class RoomChase implements ActionListener, KeyListener, MouseListener, Co
 		});
 	}
 
-	public void addActionListenerToButtons(JButton[] btns){
+	public void addActionListenerToButtons(JButton[] btns){ //ads action listeners to buttons
 		btns[0].addActionListener(this);
 		btns[1].addActionListener(this);
 		btns[2].addActionListener(this);
@@ -138,7 +143,7 @@ public class RoomChase implements ActionListener, KeyListener, MouseListener, Co
 		btns[4].addActionListener(this);
 	}
 
-	public void addTextAreaKeyListener(JTextArea ta){
+	public void addTextAreaKeyListener(JTextArea ta){ //adds key listener to Jtextarea
 		ta.addKeyListener(this);
 	}
 
@@ -179,7 +184,6 @@ public class RoomChase implements ActionListener, KeyListener, MouseListener, Co
 	public void addPlayer(Player p){
 		players.add(p);
 		playernum = players.size();
-		
 	}
 
 	public void addGameKeyListener(RoomPanel[] roompanel){
@@ -193,10 +197,6 @@ public class RoomChase implements ActionListener, KeyListener, MouseListener, Co
 			roompanel[i].addMouseListener(this);
 		}
 	}
-
-
-
-
 
 	public void removeGameKeyListener(RoomPanel[] roompanel){
 		for(int i=0;i<roompanel.length;i++){
@@ -213,6 +213,7 @@ public class RoomChase implements ActionListener, KeyListener, MouseListener, Co
 	public void stopKeys(){
 		removeGameKeyListener(ui.getRoomPanel());
 		removeGameMouseListener(ui.getRoomPanel());
+		ui.switchWindow(DEFEAT);
 	}
 
 	public void showVictory(){
@@ -227,7 +228,7 @@ public class RoomChase implements ActionListener, KeyListener, MouseListener, Co
 		
 	}
 
-	public void switchView(RoomPanel[] rm){
+	public void switchView(RoomPanel[] rm){ //switches a player's view according to where the player is facing
 		if(rooms[players.get(0).getLocationX()][players.get(0).getLocationY()].getWall(face).getType()==NO_DOOR){
 			ui.switchWindow(NODOOR);
 			rm[0].requestFocus();
@@ -252,11 +253,29 @@ public class RoomChase implements ActionListener, KeyListener, MouseListener, Co
 
 	public void keyPressed(KeyEvent e){
 		RoomPanel[] rm = ui.getRoomPanel();
+		JFrame frame = ui.getFrame();
+		JTextField answerBox = ui.getAnswerBox();
+		JTextArea textarea = ui.getChatArea();
 		if(e.getKeyCode()==KeyEvent.VK_ENTER){
-			chatbox.sendMessage(ui.getTextFromChat());
-			ui.setBlank();
+			if(frame.getFocusOwner()==answerBox){
+				if(ui.getAnswer().toLowerCase().equals(rooms[players.get(0).getLocationX()][players.get(0).getLocationY()].getWall(face).getAnswer().toLowerCase())){
+					int x = players.get(0).getLocationX(), y = players.get(0).getLocationY();
+					rooms[x][y].getWall(face).open(true);
+					ui.hidePuzzleJD();
+					updateRoom();
+					rooms[x][y].getWall(face).open(false);
+					ui.clearAnswer();
+				}
+				else {
+					ui.getRiddleLabel().setText(rooms[players.get(0).getLocationX()][players.get(0).getLocationY()].getWall(face).getRiddle().replace("<html>","<html> INCORRECT!!! <br/>")+"</html>");
+				}
+			}
+			else if (frame.getFocusOwner()==textarea){
+				chatbox.sendMessage(ui.getTextFromChat());
+				ui.setBlank();
+			}
 		}
-		else if(e.getKeyCode()==37){
+		else if(e.getKeyCode()==37){ //if left is pressed, the player navigates the room in counter clockwise
 			if(face==1)face=4;
 			else face--;
 
@@ -272,7 +291,7 @@ public class RoomChase implements ActionListener, KeyListener, MouseListener, Co
 				rm[1].requestFocus();
 			}*/
 		}
-		else if(e.getKeyCode()==39){
+		else if(e.getKeyCode()==39){ //if right is pressed, the player navigates clockwise
 			if(face==4) face=1;
 			else face++;
 
@@ -341,7 +360,7 @@ public class RoomChase implements ActionListener, KeyListener, MouseListener, Co
 		}
 	}
 
-	private String setClue(String ans){
+	private String setClue(String ans){ //sets a clue to a riddle so that players will not have a hard time answering
 		int cluenum = 0;
 		Random rand = new Random();
 		int[] clues = new int[2];
@@ -382,7 +401,7 @@ public class RoomChase implements ActionListener, KeyListener, MouseListener, Co
 		return tempans.toString().replace("_"," _");
 	}
 
-	private boolean ifClue(int[] clues, int temp){
+	private boolean ifClue(int[] clues, int temp){ //checks if temp is already a clue
 		for(int i=0;i<clues.length;i++){
 			if(clues[i]==temp){
 				return true;
@@ -392,7 +411,7 @@ public class RoomChase implements ActionListener, KeyListener, MouseListener, Co
 		return false;
 	}
 
-	private void initClues(int[] clues){
+	private void initClues(int[] clues){ //initializes clues to -1
 		for(int i=0; i<clues.length; i++){
 			clues[i] = -1;
 		}

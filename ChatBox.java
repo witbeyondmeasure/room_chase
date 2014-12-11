@@ -1,7 +1,9 @@
 import java.io.*;
 import java.net.*;
 import java.awt.*;
-
+/**
+*ChatBox Class: Abstraction of the Chatbox UI. Most of the time used as the bridge between the ReceiverThread Class and the RoomChase Class
+*/
 public class ChatBox{
 	private InetAddress ipa;
 	private DatagramSocket clientSocket;

@@ -1,7 +1,9 @@
 import java.io.*;
 import java.net.*;
 import java.awt.*;
-
+/**
+*Player class: Stored by the server and each player to keep track of each player's location and status
+*/
 public class Player implements Constants{
 	private String name;
 	private InetAddress ipa;
@@ -12,7 +14,7 @@ public class Player implements Constants{
 	private int status;
 	private int face = 1;
 
-	public Player(int id, String name, InetAddress ipa, int port, String color){
+	public Player(int id, String name, InetAddress ipa, int port, String color){ //constructor for Server
 		this.name = name;
 		this.ipa = ipa;
 		this.port = port;
@@ -21,13 +23,13 @@ public class Player implements Constants{
 		this.status = ALIVE;
 	}
 
-	public Player(String name, Point location, String color){
+	public Player(String name, Point location, String color){ //constructor for each client
 		this.name = name;
 		this.location = location;
 		this. color = color;
 	}
 
-	public Player(String name){
+	public Player(String name){ //constructor for each client 
 		this.name = name;
 	}
 

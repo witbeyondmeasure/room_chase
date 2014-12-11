@@ -1,3 +1,7 @@
+/**
+*GameServer Class: Class for the server. One server must be running to play the game
+*/
+
 import java.io.*;
 import java.net.*;
 import java.awt.*;
@@ -6,6 +10,7 @@ import java.util.*;
 import java.awt.event.*;
 
 public class GameServer implements Runnable,Constants{
+	private int expectednum;
 	private int playernum;
 	private DatagramSocket serverSocket = null;
 	private ArrayList<Player> players = new ArrayList<Player>();
@@ -14,9 +19,10 @@ public class GameServer implements Runnable,Constants{
 	private int[][] rooms = new int[3][3];
 	private String doorPosition;
 
-	public GameServer(){
+	public GameServer(int expectednum){
 		this.gameStage = WAITING_FOR_PLAYERS;
 		this.playernum=0;
+		this.expectednum = expectednum;
 		try{
 			serverSocket = new DatagramSocket(PORT);
 			serverSocket.setSoTimeout(100);
@@ -32,7 +38,7 @@ public class GameServer implements Runnable,Constants{
 		doorPosition = initDoors();
 	}
 
-	private void printLoc(){
+	private void printLoc(){ //For printing each player's location
 		for(int i=0;i<3;i++){
 			for(int j=0;j<3;j++){
 				System.out.print(rooms[i][j]+" ");
@@ -41,9 +47,9 @@ public class GameServer implements Runnable,Constants{
 		}
 	}
 
-	private void broadcast(String msg, String name, String color){
+	private void broadcast(String msg, String name, String color){ //method for broadcasting a protocol to all players
 		msg = "MSG##"+name+":"+msg+"##"+color;
-		for(int i=0;i<playernum;i++){
+		for(int i=0;i<players.size();i++){
 			try{
 				sendData = msg.getBytes();
 				DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, players.get(i).getIPAddress(), players.get(i).getPort());
@@ -55,14 +61,14 @@ public class GameServer implements Runnable,Constants{
 		}
 	}
 
-	private void broadcastConnect(String name, Point p){
+	private void broadcastConnect(String name, Point p){ //method for broadcasting a player's connection
 		String msg = "CONNECTED##"+name+" has connected to the server.##LOC##"+(int)p.getX()+";;"+(int)p.getY()+"##"+assignColor();
 		for(int i=0;i<playernum;i++){
 			try{
 				sendData = msg.getBytes();
 				DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, players.get(i).getIPAddress(), players.get(i).getPort());
 				serverSocket.send(sendPacket);
-				printLoc();
+				// printLoc();
 			}
 			catch(Exception e){
 
@@ -70,8 +76,8 @@ public class GameServer implements Runnable,Constants{
 		}
 	}
 
-	private void broadcastFaceMovement(String msg){
-		for(int i=0;i<playernum;i++){
+	private void broadcastFaceMovement(String msg){ //method for broadcasting the update of where a player is facing
+		for(int i=0;i<players.size();i++){
 			try{
 				sendData = msg.getBytes();
 				DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, players.get(i).getIPAddress(), players.get(i).getPort());
@@ -83,7 +89,7 @@ public class GameServer implements Runnable,Constants{
 		}
 	}
 
-	private void broadcastRoomMovement(String msg){
+	private void broadcastRoomMovement(String msg){ //method for broadcasting update of a player's location
 		String[] temp = msg.split("##");
 		int p = searchPlayerByName(temp[1]);
 		String[] temp2 = temp[2].split(";;");
@@ -95,16 +101,14 @@ public class GameServer implements Runnable,Constants{
 
 		msg = msg + "##" +oldx+";;"+oldy;
 
-		if(collide(newx, newy))
-		{
+		/*if(collide(newx, newy)){
 			for(int i=0;i<playernum;i++){
-				if(players.get(i).getLocationX()==newx&&players.get(i).getLocationY()==newy){
+				if(players.get(i).getLocationX()==newx&&players.get(i).getLocationY()==newy&&p!=i){
 					killPlayer(players.get(p).getName(), players.get(i).getName(), i);
-					// p = searchPlayerByName(temp[1]);
 					break;
 				}
 			}
-		}
+		}*/
 
 		players.get(p).setLocation(new Point(Integer.parseInt(temp2[0]),Integer.parseInt(temp2[1])));
 		rooms[oldx][oldy] = -1;
@@ -112,7 +116,7 @@ public class GameServer implements Runnable,Constants{
 		checkSides(Integer.parseInt(temp2[0]),Integer.parseInt(temp2[1]));
 		
 
-		for(int i=0;i<playernum;i++){
+		for(int i=0;i<players.size();i++){
 			try{
 				sendData = msg.getBytes();
 				DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, players.get(i).getIPAddress(), players.get(i).getPort());
@@ -122,16 +126,25 @@ public class GameServer implements Runnable,Constants{
 
 			}
 		}
+
+		if(collide(newx, newy)){
+			for(int i=0;i<players.size();i++){
+				if(players.get(i).getLocationX()==newx&&players.get(i).getLocationY()==newy&&p!=i){
+					killPlayer(players.get(p).getName(), players.get(i).getName(), i);
+					break;
+				}
+			}
+		}
 	}
 
-	private void killPlayer(String player0, String player1, int player2){
+	private void killPlayer(String player0, String player1, int player2){ //method for killing a player
 		//1 = int for killer
 		//2 = int for victim
 		String msg = "DEATH##"+player0+"##"+player1;
 		String msg2 = "TERMINATE##";
 
 		//broadcast the death
-		for(int i=0;i<playernum;i++){
+		for(int i=0;i<players.size();i++){
 			try{
 				sendData = msg.getBytes();
 				DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, players.get(i).getIPAddress(), players.get(i).getPort());
@@ -153,8 +166,9 @@ public class GameServer implements Runnable,Constants{
 			}
 
 		//update player list and count
+		int n = searchPlayerByName(player0);
 		players.get(player2).setStatus(DEAD);
-		rooms[players.get(player2).getLocationX()][players.get(player2).getLocationY()]=-1;
+		rooms[players.get(player2).getLocationX()][players.get(player2).getLocationY()]=players.get(n).getID()-1;
 		playernum--;
 
 		if(playernum==1){
@@ -198,7 +212,7 @@ public class GameServer implements Runnable,Constants{
 		// System.out.println(msg);
 	}
 
-	private int searchWinner(){
+	private int searchWinner(){ //Method for searching the winner
 		for(int i=0;i<players.size();i++){
 			if(players.get(i).getStatus()==ALIVE){
 				return i;
@@ -207,14 +221,14 @@ public class GameServer implements Runnable,Constants{
 		return -1;
 	}
 
-	private void checkSides(int x, int y){
+	private void checkSides(int x, int y){ //method for checking if two players are in side-by-side rooms
 		String msg = "MSG##Server: There is someone in a room next to you";
 		int temp, flag=0;
 		for (int dx = (x > 0 ? -1 : 0); dx <= (x < 2 ? 1 : 0); ++dx){
 			for (int dy = (y > 0 ? -1 : 0); dy <= (y < 2 ? 1 : 0); ++dy){
-		    	if((dx==0&&dy==0)||(dx==dy)){}
-		    	else if(rooms[x+dx][y+dy]!=-1){
-		    		temp = searchPlayerIndex(x+dx, y+dy);
+				if((dx==0&&dy==0)||(Math.abs(dx)==Math.abs(dy))){}
+				else if(rooms[x+dx][y+dy]!=-1){
+					temp = searchPlayerIndex(x+dx, y+dy);
 					sendToPlayer(msg, players.get(temp).getIPAddress(),players.get(temp).getPort());
 					flag=1;
 				}
@@ -241,7 +255,7 @@ public class GameServer implements Runnable,Constants{
 		return "RED";
 	}
 
-	private void sendDoorPosition(){
+	private void sendDoorPosition(){ //method for sending door position
 		String msg = "DOOR##"+doorPosition;
 		try{
 			sendData = msg.getBytes();
@@ -253,7 +267,7 @@ public class GameServer implements Runnable,Constants{
 		}
 	}
 
-	private void sendOtherPlayers(){
+	private void sendOtherPlayers(){ //method for sending other player's data to a player
 		String msg = "PLAYER";
 		for(int i=0;i<playernum-1;i++){
 			msg = msg+"##"+players.get(i).getName()+"##"+players.get(i).getLocationX()+";;"+players.get(i).getLocationY()+"##"+players.get(i).getColor();
@@ -261,15 +275,16 @@ public class GameServer implements Runnable,Constants{
 				sendData = msg.getBytes();
 				DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, players.get(playernum-1).getIPAddress(), players.get(playernum-1).getPort());
 				serverSocket.send(sendPacket);
-				printLoc();
+				//printLoc();
 			}
 			catch(Exception e){
 
 			}
+			msg="PLAYER";
 		}
 	}
 
-	private void startGame(){
+	private void startGame(){ //method for broadcasting the start of a game
 		String msg = "START";
 		for(int i=0;i<playernum;i++){
 			try{
@@ -283,7 +298,7 @@ public class GameServer implements Runnable,Constants{
 		}
 	}
 
-	private void sendToPlayer(String msg, InetAddress ipa, int port){
+	private void sendToPlayer(String msg, InetAddress ipa, int port){ //method that sends a protocol to one player
 		try{
 			sendData = msg.getBytes();
 			DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, ipa, port);
@@ -294,8 +309,8 @@ public class GameServer implements Runnable,Constants{
 		}
 	}
 
-	public int searchPlayerByName(String name){
-		for(int i=0;i<playernum;i++){
+	public int searchPlayerByName(String name){ //method for searching a player by name
+		for(int i=0;i<players.size();i++){
 			if(players.get(i).getName().equals(name)){
 				return i;
 			}
@@ -303,8 +318,8 @@ public class GameServer implements Runnable,Constants{
 		return -1;
 	}
 
-	private String searchPlayerColor(String name){
-		for(int i=0;i<playernum;i++){
+	private String searchPlayerColor(String name){ //method for searching a player's color
+		for(int i=0;i<players.size();i++){
 			if(players.get(i).getName().equals(name)){
 				return players.get(i).getColor();
 			}
@@ -313,7 +328,7 @@ public class GameServer implements Runnable,Constants{
 	}
 
 	public int searchPlayerIndex(int x, int y){
-		for(int i=0;i<playernum;i++){
+		for(int i=0;i<players.size();i++){
 			if(players.get(i).getLocationX()==x && players.get(i).getLocationY()==y){
 				return i;
 			}
@@ -335,9 +350,9 @@ public class GameServer implements Runnable,Constants{
 			switch(gameStage){
 				case WAITING_FOR_PLAYERS:
 					if(protocol.startsWith("CONNECT##")){
-						if(playernum<2){
+						if(playernum<expectednum){
 							String msg[] = protocol.split("##");
-							playernum+=1;
+							playernum++;
 							System.out.println(msg[0]);
 							players.add(new Player(playernum, msg[1], packet.getAddress(), packet.getPort(), assignColor()));
 							Point loc = new Point(generateRandomLocation());
@@ -349,7 +364,7 @@ public class GameServer implements Runnable,Constants{
 								sendOtherPlayers();
 							}
 						}
-						if(playernum==2){
+						if(playernum==expectednum){
 							gameStage = GAME_START;
 							startGame();
 						}
@@ -369,7 +384,7 @@ public class GameServer implements Runnable,Constants{
 					}
 					else if(protocol.startsWith("UPDATEROOM##")){
 						broadcastRoomMovement(protocol);
-						printLoc();
+						//printLoc();
 					}
 					break;
 				case IN_PROGRESS:
@@ -384,7 +399,7 @@ public class GameServer implements Runnable,Constants{
 		}
 	}
 
-	private Point generateRandomLocation(){
+	private Point generateRandomLocation(){ //method for generating random location of a player
 		Random rand = new Random();
 		int x = rand.nextInt(3), y = rand.nextInt(3);
 		while (collide(x,y)){
@@ -395,8 +410,8 @@ public class GameServer implements Runnable,Constants{
 		return new Point(x,y);
 	}
 
-	private boolean collide(int x, int y){
-		for(int k=0; k<playernum;k++){
+	private boolean collide(int x, int y){ //method for detecting if two players are in the same location
+		for(int k=0; k<players.size();k++){
 			if(players.get(k).getLocationX()==x&&players.get(k).getLocationY()==y){
 				return true;
 			}
@@ -404,7 +419,7 @@ public class GameServer implements Runnable,Constants{
 		return false;
 	}
 
-	public String initDoors(){
+	public String initDoors(){ //method for initializing doors so that all players have the same doors in each room
 		int i, j, k, random;
 		String init = "";	
 		Random rand = new Random();
@@ -419,13 +434,25 @@ public class GameServer implements Runnable,Constants{
 				init+="##";
 			}
 		}
-		System.out.println(init);
 		return init;
 
 	}
 
 	public static void main(String args[]){
-		Thread t = new Thread(new GameServer());
-		t.start();
+		if(args.length==0){
+			Thread t = new Thread(new GameServer(2));
+			t.start();
+		}
+		else{
+			int temp = Integer.parseInt(args[0]);
+			if(temp<=2){
+				Thread t = new Thread(new GameServer(2));
+				t.start();
+			}
+			else if(temp>=3){
+				Thread t = new Thread(new GameServer(3));
+				t.start();
+			}
+		}
 	}
 }

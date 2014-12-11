@@ -205,8 +205,20 @@ public class RoomChaseUI implements Constants{
 		}
 	}
 
+	public JFrame getFrame(){
+		return ui;
+	}
+
 	public String getAnswer(){
 		return answerBox.getText();
+	}
+
+	public JTextField getAnswerBox(){
+		return answerBox;
+	}
+
+	public JTextArea getChatArea(){
+		return textarea[1];
 	}
 
 	public void clearAnswer(){
@@ -248,6 +260,7 @@ public class RoomChaseUI implements Constants{
 
 	public void showPuzzleJD(){
 		jd[3].setVisible(true);
+		answerBox.requestFocus();
 	}
 
 	public void hidePuzzleJD(){
